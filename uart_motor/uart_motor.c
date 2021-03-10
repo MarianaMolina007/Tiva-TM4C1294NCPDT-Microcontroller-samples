@@ -43,6 +43,10 @@ uint32_t g_ui32Flags;
 char data[20]="";
 uint32_t g_ui32SysClock;
 bool flag = false;
+int8_t counter = 0;
+int8_t counterd = 0;
+int8_t counterc = 0;
+bool increment = true;
 
 //*****************************************************************************
 //
@@ -61,7 +65,52 @@ void GPIOIntHandler(void)
     uint32_t ui32Status;
     ui32Status = GPIOIntStatus(GPIO_PORTJ_BASE, true);
     GPIOIntClear(GPIO_PORTJ_BASE, ui32Status);
-    UARTSend((uint8_t *)"\\033")
+    // UARTSend((uint8_t *)"\033[2JpPressed: ", 12); //? \033 equivalente al \n
+
+    if (increment)
+    {
+        counter++;
+        if (counter > 9){
+            counterd++;
+            counter =0;
+        }
+        if (counterd > 9){
+            counterc++;
+            counterd =0;
+        }
+        if(counterc >9){
+            counter = 9;
+            counterd = 9;
+            counterc = 9;
+        }
+    }
+    else
+    {
+        counter--;
+        if (counter < 0){
+            counterd--;
+            counter = 9;
+        }
+        if (counterd < 0){
+            counterc--;
+            counterd = 9;
+        }
+        if(counterc < 0){
+            counter = 0;
+            counterd = 0;
+            counterc = 0;
+        }
+    }
+    
+    UARTCharPut(UART0_BASE, 'p');
+    UARTCharPut(UART0_BASE, ':');
+    if (counterc > 0) //? Imprime las centenas
+        UARTCharPut(UART0_BASE, (uint8_t)counterc+48);
+    if (counterd > 0|| counterc > 0) //? Imprime las decenas
+        UARTCharPut(UART0_BASE, (uint8_t)counterd+48);
+    UARTCharPut(UART0_BASE, (uint8_t)counter+48);
+    UARTCharPut(UART0_BASE, '\n');
+    
 }
 
 //*****************************************************************************
@@ -177,6 +226,25 @@ UARTIntHandler(void)
         MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0x00);    
     }
     
+    if (data[0] == 'C' && data[1] == 'O' && data[2] == 'U' && data[3] == 'N' && data[4] == 'T' && data[5] == 'E' && data[6] == 'R' && data[7] == ':')
+    {
+        dig1=data[8]-48;
+        dig2=data[9]-48;
+        dig3=data[10]-48;
+        counterc=dig1;
+        counterd=dig2;
+        counter=dig3;
+
+        if (data[11] == 'A')
+        {
+            increment = true;
+        }
+        
+        if (data[11] == 'D')
+        {
+            increment = false;
+        }        	
+    }
 }
 
 //*****************************************************************************
@@ -236,12 +304,17 @@ main(void)
     MAP_GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0|GPIO_PIN_1);
     MAP_GPIOPinTypeGPIOInput(GPIO_PORTJ_BASE, GPIO_PIN_0);
 
-    GPIOPadConfigSet(GPIO_PORTJ_BASE, GPIO_PIN0, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD_WPU);
+    GPIOPadConfigSet(GPIO_PORTJ_BASE, GPIO_PIN_0, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD_WPU);
 
     //
     // Enable processor interrupts.
     //
     MAP_IntMasterEnable();
+
+    GPIOIntTypeSet(GPIO_PORTJ_BASE, GPIO_INT_PIN_0,GPIO_FALLING_EDGE); //? Falling edge: (HIGH => LOW)
+    GPIOIntRegister(GPIO_PORTJ_BASE, GPIOIntHandler);
+    GPIOIntEnable(GPIO_PORTJ_BASE, GPIO_INT_PIN_0);
+
     MAP_TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
     MAP_TimerLoadSet(TIMER0_BASE, TIMER_A, g_ui32SysClock / 5);
     MAP_IntEnable(INT_TIMER0A);
@@ -288,7 +361,7 @@ main(void)
     MAP_PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT, true);
 
     MAP_PWMGenEnable(PWM0_BASE, PWM_GEN_0);
-uint32_t counter =0;
+    uint32_t counter =0;
     while(1)
     {}
 }
