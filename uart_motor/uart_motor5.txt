@@ -168,7 +168,6 @@ UARTIntHandler(void)
 {
     uint32_t ui32Status,pwm_value;
     uint8_t dig1,dig2,dig3,dig4;
-    counter++;
     //
     // Get the interrrupt status.
     //
@@ -190,7 +189,7 @@ UARTIntHandler(void)
         //
         //MAP_UARTCharPutNonBlocking(UART0_BASE,
         //                           MAP_UARTCharGetNonBlocking(UART0_BASE));
-	    data[ind]=MAP_UARTCharGetNonBlocking(UART0_BASE);
+	data[ind]=MAP_UARTCharGetNonBlocking(UART0_BASE);
         //
         // Blink the LED to show a character transfer is occuring.
         //

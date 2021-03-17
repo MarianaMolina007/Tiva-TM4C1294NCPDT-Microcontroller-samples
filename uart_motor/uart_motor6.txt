@@ -1,0 +1,106 @@
+// * Blinkear un LED [X]
+// * LED tenga salida PWM [X]
+// * Modificar el PWM por uart [X]
+// * LED que se prenda y se apague por uart [X]
+// * Counter
+//     * Al presionar un boton cambiaba el número
+//     * Recibir COUNTER:###_A incremente desde ###
+//     * Recibir COUNTER:###_D decremente desde ###
+//     * Limitar rango de 0 a 999
+
+
+//*****************************************************************************
+//
+// uart_echo.c - Example for reading data from and writing data to the UART in
+//               an interrupt driven fashion.
+//
+// Copyright (c) 2013-2020 Texas Instruments Incorporated.  All rights reserved.
+// Software License Agreement
+// 
+// Texas Instruments (TI) is supplying this software for use solely and
+// exclusively on TI's microcontroller products. The software is owned by
+// TI and/or its suppliers, and is protected under applicable copyright
+// laws. You may not combine this software with "viral" open-source
+// software in order to form a larger program.
+// 
+// THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
+// NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
+// NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. TI SHALL NOT, UNDER ANY
+// CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
+// DAMAGES, FOR ANY REASON WHATSOEVER.
+// 
+// This is part of revision 2.2.0.295 of the EK-TM4C1294XL Firmware Package.
+//
+//*****************************************************************************
+
+#include <stdint.h>
+#include <stdbool.h>
+#include "inc/hw_ints.h"
+#include "inc/hw_types.h"
+#include "inc/hw_memmap.h"
+#include "driverlib/debug.h"
+#include "driverlib/gpio.h"
+#include "driverlib/interrupt.h"
+#include "driverlib/pin_map.h"
+#include "driverlib/rom.h"
+#include "driverlib/rom_map.h"
+#include "driverlib/sysctl.h"
+#include "driverlib/uart.h"
+#include "driverlib/pwm.h"
+#include "driverlib/timer.h"
+
+bool flag = true;
+volatile uint32_t ui32Loop;
+
+//*****************************************************************************
+//
+// The error routine that is called if the driver library encounters an error.
+//
+//*****************************************************************************
+#ifdef DEBUG
+void
+__error__(char *pcFilename, uint32_t ui32Line)
+{
+}
+#endif
+
+void
+GPIOIntHandler(void){
+    if (flag)
+    {
+        MAP_GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, 0xFF);
+        flag = !flag;
+        for(ui32Loop = 0; ui32Loop < 1000; ui32Loop++)
+        {}
+    }
+    else
+    {
+        MAP_GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, 0x00);
+        flag = !flag;
+        for(ui32Loop = 0; ui32Loop < 1000; ui32Loop++)
+        {}
+    }
+    
+}
+
+int
+main(void)
+{
+    // Enable ports
+    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);  //habilita el gpioN
+    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOJ);  //Habilita el gpioJ
+
+    // Enable pins
+    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_1); //habilita el pin y asigna si es out o in
+    MAP_GPIOPinTypeGPIOInput(GPIO_PORTJ_BASE, GPIO_PIN_0);
+
+    GPIOPadConfigSet(GPIO_PORTJ_BASE, GPIO_PIN_0, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD_WPU);
+
+    GPIOIntTypeSet(GPIO_PORTJ_BASE, GPIO_INT_PIN_0,GPIO_FALLING_EDGE); //? Falling edge: (HIGH => LOW)
+    GPIOIntRegister(GPIO_PORTJ_BASE, GPIOIntHandler);
+    GPIOIntEnable(GPIO_PORTJ_BASE, GPIO_INT_PIN_0);
+
+    while(1)
+    {}
+}

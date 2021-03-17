@@ -41,9 +41,9 @@ static void IntDefaultHandler(void);
 // External declaration for the interrupt handler used by the application.
 //
 //*****************************************************************************
-extern void UARTIntHandler(void);
-extern void Timer0IntHandler(void); //?Regitrar interrupcion externa
-extern void GPIOIntHandler(void); //?Regitrar interrupcion externa
+// extern void UARTIntHandler(void);
+// extern void Timer0IntHandler(void); //?Regitrar interrupcion externa
+// extern void IntDefaultHandler(void); //?Regitrar interrupcion externa
 // extern void Timer1IntHandler(void); //?Regitrar interrupcion externa
 
 //*****************************************************************************
@@ -90,7 +90,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // GPIO Port C
     IntDefaultHandler,                      // GPIO Port D
     IntDefaultHandler,                      // GPIO Port E
-    UARTIntHandler,                         // UART0 Rx and Tx
+    IntDefaultHandler,                         // UART0 Rx and Tx
     IntDefaultHandler,                      // UART1 Rx and Tx
     IntDefaultHandler,                      // SSI0 Rx and Tx
     IntDefaultHandler,                      // I2C0 Master and Slave
@@ -104,7 +104,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // ADC Sequence 2
     IntDefaultHandler,                      // ADC Sequence 3
     IntDefaultHandler,                      // Watchdog timer
-    Timer0IntHandler,                      // Timer 0 subtimer A
+    IntDefaultHandler,                      // Timer 0 subtimer A
     IntDefaultHandler,                      // Timer 0 subtimer B
     IntDefaultHandler,                      // Timer 1 subtimer A
     IntDefaultHandler,                      // Timer 1 subtimer B
@@ -136,7 +136,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // ADC1 Sequence 2
     IntDefaultHandler,                      // ADC1 Sequence 3
     IntDefaultHandler,                      // External Bus Interface 0
-    GPIOIntHandler,                      // GPIO Port J
+    IntDefaultHandler,                      // GPIO Port J
     IntDefaultHandler,                      // GPIO Port K
     IntDefaultHandler,                      // GPIO Port L
     IntDefaultHandler,                      // SSI2 Rx and Tx
