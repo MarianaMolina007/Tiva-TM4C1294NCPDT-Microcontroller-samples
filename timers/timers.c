@@ -261,7 +261,6 @@ main(void)
     //
     // Enable the peripherals used by this example.
     //
-    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2);
 
@@ -273,32 +272,33 @@ main(void)
     //
     // Configure the two 32-bit periodic timers.
     //
-    MAP_TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
     MAP_TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC);
     MAP_TimerConfigure(TIMER2_BASE, TIMER_CFG_PERIODIC);
-    MAP_TimerLoadSet(TIMER0_BASE, TIMER_A, g_ui32SysClock);
     MAP_TimerLoadSet(TIMER1_BASE, TIMER_A, g_ui32SysClock / 2);
     MAP_TimerLoadSet(TIMER2_BASE, TIMER_B, g_ui32SysClock / 4);
 
     //
     // Setup the interrupts for the timer timeouts.
     //
-    MAP_IntEnable(INT_TIMER0A);
     MAP_IntEnable(INT_TIMER1A);
     MAP_IntEnable(INT_TIMER2B);
-    MAP_TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
     MAP_TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
     MAP_TimerIntEnable(TIMER2_BASE, TIMER_TIMB_TIMEOUT);
 
     //
     // Enable the timers.
     //
-    MAP_TimerEnable(TIMER0_BASE, TIMER_A);
     MAP_TimerEnable(TIMER1_BASE, TIMER_A);
     MAP_TimerEnable(TIMER2_BASE, TIMER_B);
 
     //
     // Loop forever while the timers run.
+    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+    MAP_TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
+    MAP_TimerLoadSet(TIMER0_BASE, TIMER_A, g_ui32SysClock);
+    MAP_IntEnable(INT_TIMER0A);
+    MAP_TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
+    MAP_TimerEnable(TIMER0_BASE, TIMER_A);
     //
     while(1)
     {
