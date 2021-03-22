@@ -96,54 +96,67 @@ for(ui32Loop = 0; ui32Loop < 200000; ui32Loop++){}
 ---
 
 ## Siglas
+
 |Acronym|Meaning|
 |:-----:|-------|
-|SCU | Snoop control unit|
-|FPU | floating point unit|
-|DSP | Digital signal processor|
-|ETM | Embedded trace macrocell|
-|SIMD | Single instruction multiple data|
-|MCU | Microcontroller unit|
-|GPU | Graphics processing unit|
-|SOC | System on chip|
-|AXL | Advanced extensible interface|
-|AHR | Advanced High-performance bus|
-|APB | Advanced peripheral bus|
-|RPU | Real-time processing unit|
-|APU | Application processing unit|
-|ARM | Advanced risk machine|
-|FPU | Floating point unit|
-|NEON | SIMD processor|
-|MMU | Memory management unit|
-|Icache | Instructions|
-|Dcache | Data|
-|AXI | Advanced extensible interface|
-|RPU | Raid processing unit|
-|MPU | Memory protection unit|
-|TCM | Tightly coupled memory|
-|OCM | On chip memory|
-|GPIO | General purpose input output|
-|ADC | Analog to digital converter|
-|SPI | Serial peripheral interface|
-|I2C | Inter-integrated circuit|
-|PWM | Pulse width modulation|
-|DAC | Digital to analog converter|
-|UART | Universal asynchronous receiver transmitter|
-|DDR | Double data rate|
-|LPDDR | Low power DDR|
-|USB | Universal serial bus|
-|CAN | Controller area network|
-|DMA | Direct memory access|
-|PL | Programmable logic|
-|FPGA | Field programmable gate array|
-|CLB | Configurable logic block|
-|FF | Flip flops|
-|LUT | Look-up table|
-|EDA | Electronic design automation|
-|HDL | Hardware description language|
-|DSP | Digital signal processor|
-|RAM | Random access memory|
-|BRAM | Block ram|
-|IP | Intellectual property|
-|MAC | multiple and accumulate|
-|TPY | Tensor processing unit by google|
+|ACP|Accelerator Coherency Port|
+|ADC|Analog to digital converter|
+|AHB|Advanced High Performance Bus|
+|AHR|Advanced High-performance bus|
+|FF|Flip flops|
+|APB|Advanced peripheral bus|
+|APU|Application processing unit|
+|ARM|Advanced risk machine|
+|ASIC|Application Specific Integrated Circuit|
+|ASIP|Application-Specific Instruction Processor|
+|AXI|Advanced extensible interface|
+|AXL|Advanced extensible interface|
+|BRAM|Block ram|
+|CAN|Controller area network|
+|CLB|Configurable logic block|
+|DAC|Digital to analog converter|
+|Dcache|Data|
+|DDR|Double data rate|
+|DMA|Direct memory access|
+|DSP|Digital signal processor|
+|ECC|Error Correction Code|
+|EDA|Electronic design automation|
+|ETM|Embedded trace macrocell|
+|LPDDR|Low Power Double Data Rate|
+|FPGA|Field programmable gate array|
+|FPU|Floating point unit|
+|GPGPU|General Purpose Graphics Processing Unit|
+|GPIO|General purpose input output|
+|GPU|Graphics processing unit|
+|HDL|Hardware description language|
+|I2C|Inter-integrated circuit|
+|Icache|Instructions|
+|IP|Intellectual property|
+|LPDDR|Low power DDR|
+|LUT|Look-up table|
+|MAC|multiple and accumulate|
+|MCU|MicroController Unit|
+|MMU|Memory management unit|
+|MPSoC|MultiProcessor SoC|
+|MPU|Memory protection unit|
+|NEON|SIMD processor|
+|OCM|On chip memory|
+|PL|Programmable logic|
+|PWM|Pulse width modulation|
+|RAM|Random access memory|
+|RPU|Raid processing unit|
+|RTL|Register Transfer Level|
+|RTOS|Real Time Operating System|
+|SBC|Single Board COmputer|
+|SCU|Snoop Control Unit|
+|SDP|Digital Signal Processor|
+|SIMD|Single Instruction Multiple Data|
+|SoC|System on a Chip|
+|SPI|Serial peripheral interface|
+|TCM|Tightly coupled memory|
+|TPU|Tensor Processing Unit|
+|TPY|Tensor processing unit by google|
+|UART|Universal asynchronous receiver transmitter|
+|USB|Universal serial bus|
+|VHDL|Very High Speed Integrated Circuit Hardware Description Language|
+|VLSI|Very large-scale integration|
