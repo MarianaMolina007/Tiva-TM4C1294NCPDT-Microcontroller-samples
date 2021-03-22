@@ -331,7 +331,7 @@ main(void)
     // Loop forever echoing data through the UART.
     //
 
-	 MAP_GPIOPinConfigure(GPIO_PF0_M0PWM0);
+	MAP_GPIOPinConfigure(GPIO_PF0_M0PWM0);
     MAP_GPIOPinTypePWM(GPIO_PORTF_BASE, GPIO_PIN_0);
 
     MAP_PWMClockSet(PWM0_BASE, PWM_SYSCLK_DIV_64);
