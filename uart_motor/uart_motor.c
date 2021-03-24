@@ -194,6 +194,16 @@ UARTIntHandler(void)
         MAP_GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0);
         ind++;
     }
+
+    if (data[0] == 'L' && data[1] == 'D' && data[2] == '_' && data[3] == 'O' && data[4] == 'N')
+    {
+        MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0xFF);
+    }
+    
+    if (data[0] == 'L' && data[1] == 'D' && data[2] == '_' && data[3] == 'O' && data[4] == 'F' && data[5] == 'F')
+    {
+        MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0x00);    
+    }
 	
     if(data[0]=='P' && data[1]=='W' && data[2]=='M'&& data[3]=='_'){
 	dig1=data[4]-48;
@@ -220,12 +230,6 @@ UARTIntHandler(void)
         UARTCharPut(UART0_BASE, (uint8_t)48+dig2);
         UARTCharPut(UART0_BASE, (uint8_t)48+dig3);
     }
-
-    if (data[0] == 'L' && data[1] == 'D' && data[2] == '_' && data[3] == 'O' && data[4] == 'N')
-        MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0xFF);
-    
-    if (data[0] == 'L' && data[1] == 'D' && data[2] == '_' && data[3] == 'O' && data[4] == 'F' && data[5] == 'F')
-        MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0x00);    
 }
 
 

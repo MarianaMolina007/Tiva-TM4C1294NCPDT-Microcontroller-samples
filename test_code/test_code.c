@@ -193,11 +193,20 @@ void GPIOIntHandler(void)
     GPIOIntClear(GPIO_PORTJ_BASE,ui32Status);
     if (ui32Status == 0x01)
     {
-        automatic = false;
+        automatic = !automatic;
     }
     if (ui32Status == 0x02)
     {
-        automatic = true;
+        counter++;
+        if (counter == 16)
+        {
+            counter = 0;
+        }
+        
+        MAP_GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, ((counter)%2) ? 0xFF : 0x00);
+        MAP_GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, ((counter/2)%2) ? 0xFF : 0x00);
+        MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, ((counter/4)%2) ? 0xFF : 0x00);
+        MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, ((counter/8)%2) ? 0xFF : 0x00);
     }
     
 }
@@ -250,7 +259,7 @@ main(void)
     #pragma region buttons
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOJ); // Enable Port J
     MAP_GPIOPinTypeGPIOInput(GPIO_PORTJ_BASE, GPIO_PIN_0 | GPIO_PIN_1); // Asign Pin J0 as Input
-    GPIOPadConfigSet(GPIO_PORTJ_BASE, GPIO_PIN_0, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD_WPU); // Set input pin with 4mA
+    GPIOPadConfigSet(GPIO_PORTJ_BASE, GPIO_PIN_0 | GPIO_PIN_1, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD_WPU); // Set input pin with 4mA
     GPIOIntTypeSet(GPIO_PORTJ_BASE, GPIO_INT_PIN_0 | GPIO_PIN_1, GPIO_FALLING_EDGE); // Set pin J0 as falling edge (Falling edge or rising edge)
     GPIOIntRegister(GPIO_PORTJ_BASE, GPIOIntHandler); // Set void as an action
     GPIOIntEnable(GPIO_PORTJ_BASE, GPIO_INT_PIN_0 | GPIO_PIN_1); // Enable pin J0
@@ -269,10 +278,10 @@ main(void)
     MAP_TimerConfigure(TIMER2_BASE, TIMER_CFG_PERIODIC);
     MAP_TimerConfigure(TIMER3_BASE, TIMER_CFG_PERIODIC);
     
-    MAP_TimerLoadSet(TIMER0_BASE, TIMER_A, g_ui32SysClock *8); // 1 segundo 
-    MAP_TimerLoadSet(TIMER1_BASE, TIMER_A, g_ui32SysClock *4); // 0.5 segundos
-    MAP_TimerLoadSet(TIMER2_BASE, TIMER_A, g_ui32SysClock *2); 
-    MAP_TimerLoadSet(TIMER3_BASE, TIMER_A, g_ui32SysClock );
+    MAP_TimerLoadSet(TIMER0_BASE, TIMER_A, g_ui32SysClock); // 1 segundo 
+    MAP_TimerLoadSet(TIMER1_BASE, TIMER_A, g_ui32SysClock *2); // 0.5 segundos
+    MAP_TimerLoadSet(TIMER2_BASE, TIMER_A, g_ui32SysClock *4); 
+    MAP_TimerLoadSet(TIMER3_BASE, TIMER_A, g_ui32SysClock *8);
 
     MAP_IntEnable(INT_TIMER0A);
     MAP_IntEnable(INT_TIMER1A);
