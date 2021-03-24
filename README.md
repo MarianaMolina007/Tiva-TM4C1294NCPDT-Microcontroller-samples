@@ -27,17 +27,16 @@ GPIOIntEnable(GPIO_PORTJ_BASE, GPIO_INT_PIN_0); // Enable pin J0
 ### Example code
 
 ~~~c
-MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM0); // Enable PWM0
-MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1); // Enable Timer 1
-MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF); // Enable port F
 MAP_GPIOPinConfigure(GPIO_PF0_M0PWM0); // Configure PWM by table pin name
-MAP_GPIOPinTypePWM(GPIO_PORTF_BASE, GPIO_PIN_0); // Asign pin F0 as PWM 
-MAP_PWMClockSet(PWM0_BASE, PWM_SYSCLK_DIV_8); // Set PWM clock with prescaler of 8 (8, 64)
-ui32PWMClockRate = g_ui32SysClock / 8; // Divide clock with prescaler
-MAP_PWMGenConfigure(PWM0_BASE, PWM_GEN_0, PWM_GEN_MODE_DOWN | PWM_GEN_MODE_NO_SYNC); // Configure generator 0 based on table, most of time gen (we have up"triangular signal" and down"sawtooth signal"), no sync for 2 generators 0 independet (we have dependent and independent)
-MAP_PWMGenPeriodSet(PWM0_BASE, PWM_GEN_0, (ui32PWMClockRate / freq_m1)); // Configure PWM frequency in Hz
-g_ui32PWMIncrement = ((ui32PWMClockRate / freq_m1) / 1000); // pulse width variable
-MAP_PWMPulseWidthSet(PWM0_BASE, PWM_OUT_7, g_ui32PWMIncrement); // Set pulse width
+MAP_GPIOPinTypePWM(GPIO_PORTF_BASE, GPIO_PIN_0);
+
+MAP_PWMClockSet(PWM0_BASE, PWM_SYSCLK_DIV_64);
+ui32PWMClockRate = g_ui32SysClock / 64;
+MAP_PWMGenConfigure(PWM0_BASE, PWM_GEN_0,
+                    PWM_GEN_MODE_DOWN | PWM_GEN_MODE_NO_SYNC);
+MAP_PWMGenPeriodSet(PWM0_BASE, PWM_GEN_0, (ui32PWMClockRate / 1000));
+MAP_PWMPulseWidthSet(PWM0_BASE, PWM_OUT_0, 1200);
+MAP_PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT, true);
 ~~~
 
 ### Code table

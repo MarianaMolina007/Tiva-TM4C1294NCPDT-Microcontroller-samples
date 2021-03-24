@@ -353,7 +353,6 @@ main(void)
     MAP_PWMPulseWidthSet(PWM0_BASE, PWM_OUT_0, 1200);
     MAP_PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT, true);
 
- 
     MAP_PWMGenEnable(PWM0_BASE, PWM_GEN_0);
     
     while(1)

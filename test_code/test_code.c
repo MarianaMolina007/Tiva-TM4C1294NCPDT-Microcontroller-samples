@@ -14,7 +14,12 @@
 #include "driverlib/timer.h"
 #include "driverlib/uart.h"
 #include "utils/uartstdio.h"
+#include "driverlib/pwm.h"
 
+#define freq_m1 1000
+char data[20]="";
+uint32_t g_ui32PWMIncrement;//!
+uint32_t vel_pwm = 0;
 uint32_t g_ui32SysClock;
 uint32_t g_ui32Flags;
 bool flag1 = true;
@@ -92,7 +97,7 @@ Timer1IntHandler(void)
     //
     if(automatic){    if (flag2)
         {
-            GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0xFF);
+            GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1, 0xFF);
         }
         else
         {
@@ -194,10 +199,15 @@ void GPIOIntHandler(void)
     if (ui32Status == 0x01)
     {
         automatic = !automatic;
+<<<<<<< HEAD
+=======
+        counter = 0;
+>>>>>>> e2ce16fe08eb67e87aaaa2d91d1c11162829dbd9
     }
-    if (ui32Status == 0x02)
+    if (!automatic && ui32Status == 0x02)
     {
         counter++;
+<<<<<<< HEAD
         if (counter == 16)
         {
             counter = 0;
@@ -207,11 +217,94 @@ void GPIOIntHandler(void)
         MAP_GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, ((counter/2)%2) ? 0xFF : 0x00);
         MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, ((counter/4)%2) ? 0xFF : 0x00);
         MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, ((counter/8)%2) ? 0xFF : 0x00);
+=======
+        if(counter == 16)
+            counter = 0;
+        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, ((counter+1)%2==0)? 0xFF : 0x00); 
+        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, ((counter+2)%4==0)? 0xFF : 0x00); 
+        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, ((counter+4)%8==0)? 0xFF : 0x00); 
+        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, ((counter+8)%16==0)? 0xFF : 0x00); 
+>>>>>>> e2ce16fe08eb67e87aaaa2d91d1c11162829dbd9
     }
     
 }
 
+#pragma region UART
 void
+UARTIntHandler(void)
+{
+    uint32_t ui32Status,pwm_value;
+    uint8_t dig1,dig2,dig3,dig4;
+    //
+    // Get the interrrupt status.
+    //
+    ui32Status = MAP_UARTIntStatus(UART0_BASE, true);
+
+    //
+    // Clear the asserted interrupts.
+    //
+    MAP_UARTIntClear(UART0_BASE, ui32Status);
+
+    //
+    // Loop while there are characters in the receive FIFO.
+    //
+    uint8_t ind=0;
+    while(MAP_UARTCharsAvail(UART0_BASE))
+    {
+        //
+        // Read the next character from the UART and write it back to the UART.
+        //
+        //MAP_UARTCharPutNonBlocking(UART0_BASE,
+        //                           MAP_UARTCharGetNonBlocking(UART0_BASE));
+	    data[ind]=MAP_UARTCharGetNonBlocking(UART0_BASE);
+        //
+        // Blink the LED to show a character transfer is occuring.
+        //
+        MAP_GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, GPIO_PIN_0);
+
+        //
+        // Delay for 1 millisecond.  Each SysCtlDelay is about 3 clocks.
+        //
+        SysCtlDelay(g_ui32SysClock / (1000 * 3));
+
+        //
+        // Turn off the LED
+        //
+        MAP_GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0);
+        ind++;
+    }
+
+    if(data[0]=='P' && data[1]=='W' && data[2]=='M'&& data[3]=='_'){
+	dig1=data[4]-48;
+	dig2=data[5]-48;
+	dig3=data[6]-48;
+	dig4=data[7]-48;
+	pwm_value=dig1*1000+dig2*100+dig3*10+dig4;	
+	MAP_PWMPulseWidthSet(PWM0_BASE, PWM_OUT_5, pwm_value); ///***
+	}
+}
+
+
+//*****************************************************************************
+//
+// Send a string to the UART.
+//
+//*****************************************************************************
+void
+UARTSend(const uint8_t *pui8Buffer, uint32_t ui32Count)
+{
+    //
+    // Loop while there are more characters to send.
+    //
+    while(ui32Count--)
+    {
+        //
+        // Write the next character to the UART.
+        //
+        MAP_UARTCharPutNonBlocking(UART0_BASE, *pui8Buffer++);
+    }
+}
+
 ConfigureUART(void)
 {
     //
@@ -237,9 +330,13 @@ ConfigureUART(void)
     UARTStdioConfig(0, 115200, g_ui32SysClock);
 }
 
+
+
+#pragma endregion UART
 int
 main(void)
 {
+    uint32_t ui32PWMClockRate;
     g_ui32SysClock = MAP_SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ |
                                              SYSCTL_OSC_MAIN |
                                              SYSCTL_USE_PLL |
@@ -255,7 +352,6 @@ main(void)
     MAP_GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1);
     MAP_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_0 | GPIO_PIN_4);
     #pragma endregion leds
-
     #pragma region buttons
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOJ); // Enable Port J
     MAP_GPIOPinTypeGPIOInput(GPIO_PORTJ_BASE, GPIO_PIN_0 | GPIO_PIN_1); // Asign Pin J0 as Input
@@ -264,7 +360,6 @@ main(void)
     GPIOIntRegister(GPIO_PORTJ_BASE, GPIOIntHandler); // Set void as an action
     GPIOIntEnable(GPIO_PORTJ_BASE, GPIO_INT_PIN_0 | GPIO_PIN_1); // Enable pin J0
     #pragma endregion buttons
-
     #pragma region timers
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
@@ -299,6 +394,33 @@ main(void)
     MAP_TimerEnable(TIMER3_BASE, TIMER_A);
 
     #pragma endregion timers
+    #pragma region UART
+    MAP_GPIOPinConfigure(GPIO_PA0_U0RX);
+    MAP_GPIOPinConfigure(GPIO_PA1_U0TX);
+    MAP_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+    MAP_UARTConfigSetExpClk(UART0_BASE, g_ui32SysClock, 115200,
+                            (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
+                                UART_CONFIG_PAR_NONE));
+    MAP_IntEnable(INT_UART0);
+    MAP_UARTIntEnable(UART0_BASE, UART_INT_RX | UART_INT_RT);
+
+    #pragma endregion UART
+    #pragma region PWM
+    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);
+    MAP_GPIOPinConfigure(GPIO_PG1_M0PWM5);
+    MAP_GPIOPinTypePWM(GPIO_PORTG_BASE, GPIO_PIN_1);
+
+    MAP_PWMClockSet(PWM0_BASE, PWM_SYSCLK_DIV_64);
+    ui32PWMClockRate = g_ui32SysClock / 64;
+    MAP_PWMGenConfigure(PWM0_BASE, PWM_GEN_2,
+                        PWM_GEN_MODE_DOWN | PWM_GEN_MODE_NO_SYNC);
+    MAP_PWMGenPeriodSet(PWM0_BASE, PWM_GEN_2, (ui32PWMClockRate / 1000));
+    MAP_PWMOutputState(PWM0_BASE, PWM_OUT_5, true);
+
+    MAP_PWMGenEnable(PWM0_BASE, PWM_GEN_2);
+
+    MAP_PWMPulseWidthSet(PWM0_BASE, PWM_OUT_5, 1200);
+    #pragma endregion PWM
     while(1)
     {
     }

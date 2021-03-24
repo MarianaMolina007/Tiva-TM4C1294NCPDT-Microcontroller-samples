@@ -14,4 +14,5 @@ gcc/test_code.o: test_code.c \
  ../../../../driverlib/rom.h ../../../../driverlib/rom_map.h \
  ../../../../driverlib/sysctl.h ../../../../driverlib/timer.h \
  ../../../../driverlib/uart.h ../../../../utils/uartstdio.h \
- /usr/lib/gcc/arm-none-eabi/7.3.1/include/stdarg.h
+ /usr/lib/gcc/arm-none-eabi/7.3.1/include/stdarg.h \
+ ../../../../driverlib/pwm.h
