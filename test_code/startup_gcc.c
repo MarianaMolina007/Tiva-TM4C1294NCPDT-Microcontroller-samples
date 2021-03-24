@@ -45,6 +45,7 @@ extern void Timer0IntHandler(void);
 extern void Timer1IntHandler(void);
 extern void Timer2IntHandler(void);
 extern void Timer3IntHandler(void);
+extern void GPIOIntHandler(void);
 
 //*****************************************************************************
 //
@@ -137,7 +138,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // ADC1 Sequence 2
     IntDefaultHandler,                      // ADC1 Sequence 3
     IntDefaultHandler,                      // External Bus Interface 0
-    IntDefaultHandler,                      // GPIO Port J
+    GPIOIntHandler,                           // GPIO Port J
     IntDefaultHandler,                      // GPIO Port K
     IntDefaultHandler,                      // GPIO Port L
     IntDefaultHandler,                      // SSI2 Rx and Tx

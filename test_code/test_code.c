@@ -21,12 +21,16 @@ bool flag1 = true;
 bool flag2 = true;
 bool flag3 = true;
 bool flag4 = true;
+bool automatic = true;
+uint8_t counter = 0;
 #ifdef DEBUG
 void
 __error__(char *pcFilename, uint32_t ui32Line)
 {
 }
 #endif
+
+#pragma region void_timers
 
 void
 Timer0IntHandler(void)
@@ -46,13 +50,15 @@ Timer0IntHandler(void)
     //
     // Use the flags to Toggle the LED for this timer
     //
-    if (flag1)
-    {
-        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, 0xFF);
-    }
-    else
-    {
-        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, 0x00);
+    if(automatic){    
+        if (flag1)
+        {
+            GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, 0xFF);
+        }
+        else
+        {
+            GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, 0x00);
+        }
     }
     flag1 = !flag1;
     //
@@ -84,14 +90,14 @@ Timer1IntHandler(void)
     //
     // Use the flags to Toggle the LED for this timer
     //
-    if (flag2)
-    {
-        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0xFF);
-    }
-    else
-    {
-        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x00);
-    }
+    if(automatic){    if (flag2)
+        {
+            GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0xFF);
+        }
+        else
+        {
+            GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x00);
+        }}
     flag2 = !flag2;
     //
     // Update the interrupt status.
@@ -121,14 +127,14 @@ Timer2IntHandler(void)
     //
     // Use the flags to Toggle the LED for this timer
     //
-    if (flag3)
-    {
-        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0xFF);
-    }
-    else
-    {
-        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0x00);
-    }
+    if(automatic){    if (flag3)
+        {
+            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0xFF);
+        }
+        else
+        {
+            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0x00);
+        }}
     flag3 = !flag3;
     //
     // Update the interrupt status.
@@ -159,14 +165,14 @@ Timer3IntHandler(void)
     //
     // Use the flags to Toggle the LED for this timer
     //
-    if (flag4)
-    {
-        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 0xFF);
-    }
-    else
-    {
-        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 0x00);
-    }
+    if(automatic){    if (flag4)
+        {
+            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 0xFF);
+        }
+        else
+        {
+            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 0x00);
+        }}
     flag4 = !flag4;
     //
     // Update the interrupt status.
@@ -176,6 +182,24 @@ Timer3IntHandler(void)
     cTwo = HWREGBITW(&g_ui32Flags, 1) ? '1' : '0';
     // UARTprintf("\rT1: %c  T2: %c", cOne, cTwo);
     MAP_IntMasterEnable();
+}
+
+#pragma endregion void_timers
+
+void GPIOIntHandler(void)
+{
+    uint32_t ui32Status;
+	ui32Status=GPIOIntStatus(GPIO_PORTJ_BASE, true);
+    GPIOIntClear(GPIO_PORTJ_BASE,ui32Status);
+    if (ui32Status == 0x01)
+    {
+        automatic = false;
+    }
+    if (ui32Status == 0x02)
+    {
+        automatic = true;
+    }
+    
 }
 
 void
@@ -221,8 +245,17 @@ main(void)
 
     MAP_GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1);
     MAP_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_0 | GPIO_PIN_4);
-
     #pragma endregion leds
+
+    #pragma region buttons
+    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOJ); // Enable Port J
+    MAP_GPIOPinTypeGPIOInput(GPIO_PORTJ_BASE, GPIO_PIN_0 | GPIO_PIN_1); // Asign Pin J0 as Input
+    GPIOPadConfigSet(GPIO_PORTJ_BASE, GPIO_PIN_0, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD_WPU); // Set input pin with 4mA
+    GPIOIntTypeSet(GPIO_PORTJ_BASE, GPIO_INT_PIN_0 | GPIO_PIN_1, GPIO_FALLING_EDGE); // Set pin J0 as falling edge (Falling edge or rising edge)
+    GPIOIntRegister(GPIO_PORTJ_BASE, GPIOIntHandler); // Set void as an action
+    GPIOIntEnable(GPIO_PORTJ_BASE, GPIO_INT_PIN_0 | GPIO_PIN_1); // Enable pin J0
+    #pragma endregion buttons
+
     #pragma region timers
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
