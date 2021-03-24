@@ -14,7 +14,12 @@
 #include "driverlib/timer.h"
 #include "driverlib/uart.h"
 #include "utils/uartstdio.h"
+#include "driverlib/pwm.h"
 
+#define freq_m1 1000
+char data[20]="";
+uint32_t g_ui32PWMIncrement;//!
+uint32_t vel_pwm = 0;
 uint32_t g_ui32SysClock;
 uint32_t g_ui32Flags;
 bool flag1 = true;
@@ -92,7 +97,7 @@ Timer1IntHandler(void)
     //
     if(automatic){    if (flag2)
         {
-            GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0xFF);
+            GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1, 0xFF);
         }
         else
         {
@@ -193,16 +198,104 @@ void GPIOIntHandler(void)
     GPIOIntClear(GPIO_PORTJ_BASE,ui32Status);
     if (ui32Status == 0x01)
     {
-        automatic = false;
+        automatic = !automatic;
+        counter = 0;
     }
-    if (ui32Status == 0x02)
+    if (!automatic && ui32Status == 0x02)
     {
-        automatic = true;
+        counter++;
+        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, ((counter+1)%2==0)? 0xFF : 0x00);
+        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, ((counter+2)%4==0)? 0xFF : 0x00);
+        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, ((counter+4)%8==0)? 0xFF : 0x00);
+        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, ((counter+8)%16==0)? 0xFF : 0x00);
     }
     
 }
 
+#pragma region UART
 void
+UARTIntHandler(void)
+{
+    uint32_t ui32Status,pwm_value;
+    uint8_t dig1,dig2,dig3,dig4;
+    //
+    // Get the interrrupt status.
+    //
+    ui32Status = MAP_UARTIntStatus(UART0_BASE, true);
+
+    //
+    // Clear the asserted interrupts.
+    //
+    MAP_UARTIntClear(UART0_BASE, ui32Status);
+
+    //
+    // Loop while there are characters in the receive FIFO.
+    //
+    uint8_t ind=0;
+    while(MAP_UARTCharsAvail(UART0_BASE))
+    {
+        //
+        // Read the next character from the UART and write it back to the UART.
+        //
+        //MAP_UARTCharPutNonBlocking(UART0_BASE,
+        //                           MAP_UARTCharGetNonBlocking(UART0_BASE));
+	    data[ind]=MAP_UARTCharGetNonBlocking(UART0_BASE);
+        //
+        // Blink the LED to show a character transfer is occuring.
+        //
+        MAP_GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, GPIO_PIN_0);
+
+        //
+        // Delay for 1 millisecond.  Each SysCtlDelay is about 3 clocks.
+        //
+        SysCtlDelay(g_ui32SysClock / (1000 * 3));
+
+        //
+        // Turn off the LED
+        //
+        MAP_GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0);
+        ind++;
+    }
+
+    if(data[0]=='m' && data[1]=='1' && data[2]=='_')
+    {
+        uint8_t timer_value;
+        dig1=data[3]-48;
+        dig2=data[4]-48;
+        dig3=data[5]-48;
+        timer_value= dig1*100 + dig2*10 + dig3;    
+        
+        MAP_TimerLoadSet(TIMER0_BASE, TIMER_A, 120000000/timer_value);
+        MAP_TimerEnable(TIMER0_BASE, TIMER_A); //!
+        UARTCharPut(UART0_BASE, 'p');
+        UARTCharPut(UART0_BASE, ':');
+        UARTCharPut(UART0_BASE, (uint8_t)48+dig1);
+        UARTCharPut(UART0_BASE, (uint8_t)48+dig2);
+        UARTCharPut(UART0_BASE, (uint8_t)48+dig3);
+    }
+}
+
+
+//*****************************************************************************
+//
+// Send a string to the UART.
+//
+//*****************************************************************************
+void
+UARTSend(const uint8_t *pui8Buffer, uint32_t ui32Count)
+{
+    //
+    // Loop while there are more characters to send.
+    //
+    while(ui32Count--)
+    {
+        //
+        // Write the next character to the UART.
+        //
+        MAP_UARTCharPutNonBlocking(UART0_BASE, *pui8Buffer++);
+    }
+}
+
 ConfigureUART(void)
 {
     //
@@ -228,9 +321,13 @@ ConfigureUART(void)
     UARTStdioConfig(0, 115200, g_ui32SysClock);
 }
 
+
+
+#pragma endregion UART
 int
 main(void)
 {
+    uint32_t ui32PWMClockRate;
     g_ui32SysClock = MAP_SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ |
                                              SYSCTL_OSC_MAIN |
                                              SYSCTL_USE_PLL |
@@ -246,16 +343,14 @@ main(void)
     MAP_GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1);
     MAP_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_0 | GPIO_PIN_4);
     #pragma endregion leds
-
     #pragma region buttons
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOJ); // Enable Port J
     MAP_GPIOPinTypeGPIOInput(GPIO_PORTJ_BASE, GPIO_PIN_0 | GPIO_PIN_1); // Asign Pin J0 as Input
-    GPIOPadConfigSet(GPIO_PORTJ_BASE, GPIO_PIN_0, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD_WPU); // Set input pin with 4mA
+    GPIOPadConfigSet(GPIO_PORTJ_BASE, GPIO_PIN_0 | GPIO_PIN_1, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD_WPU); // Set input pin with 4mA
     GPIOIntTypeSet(GPIO_PORTJ_BASE, GPIO_INT_PIN_0 | GPIO_PIN_1, GPIO_FALLING_EDGE); // Set pin J0 as falling edge (Falling edge or rising edge)
     GPIOIntRegister(GPIO_PORTJ_BASE, GPIOIntHandler); // Set void as an action
     GPIOIntEnable(GPIO_PORTJ_BASE, GPIO_INT_PIN_0 | GPIO_PIN_1); // Enable pin J0
     #pragma endregion buttons
-
     #pragma region timers
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
@@ -290,6 +385,29 @@ main(void)
     MAP_TimerEnable(TIMER3_BASE, TIMER_A);
 
     #pragma endregion timers
+    #pragma region UART
+    MAP_GPIOPinConfigure(GPIO_PA0_U0RX);
+    MAP_GPIOPinConfigure(GPIO_PA1_U0TX);
+    MAP_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+    MAP_UARTConfigSetExpClk(UART0_BASE, g_ui32SysClock, 115200,
+                            (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
+                                UART_CONFIG_PAR_NONE));
+    MAP_IntEnable(INT_UART0);
+    MAP_UARTIntEnable(UART0_BASE, UART_INT_RX | UART_INT_RT);
+
+    #pragma endregion UART
+    #pragma region PWM
+    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM0); // Enable PWM0
+    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG); // Enable port G
+    MAP_GPIOPinConfigure(GPIO_PG1_M0PWM5); // Configure PWM by table pin name
+    MAP_GPIOPinTypePWM(GPIO_PORTG_BASE, GPIO_PIN_1); // Asign pin G0 as PWM 
+    MAP_PWMClockSet(PWM0_BASE, PWM_SYSCLK_DIV_8); // Set PWM clock with prescaler of 8 (8, 64)
+    ui32PWMClockRate = g_ui32SysClock / 8; // Divide clock with prescaler
+    MAP_PWMGenConfigure(PWM0_BASE, PWM_GEN_2, PWM_GEN_MODE_DOWN | PWM_GEN_MODE_NO_SYNC); // Configure generator 0 based on table, most of time gen (we have up"triangular signal" and down"sawtooth signal"), no sync for 2 generators 0 independet (we have dependent and independent)
+    MAP_PWMGenPeriodSet(PWM0_BASE, PWM_GEN_2, (ui32PWMClockRate / freq_m1)); // Configure PWM frequency in Hz
+    g_ui32PWMIncrement = ((ui32PWMClockRate / freq_m1) / 1000); // pulse width variable
+    MAP_PWMPulseWidthSet(PWM0_BASE, PWM_OUT_0, g_ui32PWMIncrement); // Set pulse width
+    #pragma endregion PWM
     while(1)
     {
     }
