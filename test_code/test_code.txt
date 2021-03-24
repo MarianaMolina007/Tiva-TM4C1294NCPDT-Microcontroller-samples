@@ -36,81 +36,6 @@ Timer0IntHandler(void)
     //
     // Clear the timer interrupt.
     //
-    MAP_TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
-
-    //
-    // Toggle the flag for the first timer.
-    //
-    HWREGBITW(&g_ui32Flags, 0) ^= 1;
-    //
-    //
-    // Use the flags to Toggle the LED for this timer
-    //
-    if (flag1)
-    {
-        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, 0xFF);
-    }
-    else
-    {
-        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, 0x00);
-    }
-    flag1 = !flag1;
-    //
-    // Update the interrupt status.
-    //
-    MAP_IntMasterDisable();
-    //Aditional logic
-    cOne = HWREGBITW(&g_ui32Flags, 0) ? '1' : '0';
-    cTwo = HWREGBITW(&g_ui32Flags, 1) ? '1' : '0';
-    // UARTprintf("\rT1: %c  T2: %c", cOne, cTwo);
-    MAP_IntMasterEnable();
-}
-
-void
-Timer1IntHandler(void)
-{
-    char cOne, cTwo;
-
-    //
-    // Clear the timer interrupt.
-    //
-    MAP_TimerIntClear(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
-
-    //
-    // Toggle the flag for the second timer.
-    //
-    HWREGBITW(&g_ui32Flags, 1) ^= 1;
-
-    //
-    // Use the flags to Toggle the LED for this timer
-    //
-    if (flag2)
-    {
-        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0xFF);
-    }
-    else
-    {
-        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x00);
-    }
-    flag2 = !flag2;
-    //
-    // Update the interrupt status.
-    // 
-    MAP_IntMasterDisable();
-    cOne = HWREGBITW(&g_ui32Flags, 0) ? '1' : '0';
-    cTwo = HWREGBITW(&g_ui32Flags, 1) ? '1' : '0';
-    // UARTprintf("\rT1: %c  T2: %c", cOne, cTwo);
-    MAP_IntMasterEnable();
-}
-
-void
-Timer2IntHandler(void)
-{
-    char cOne, cTwo;
-
-    //
-    // Clear the timer interrupt.
-    //
     MAP_TimerIntClear(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
 
     //
@@ -142,7 +67,7 @@ Timer2IntHandler(void)
 }
 
 void
-Timer3IntHandler(void)
+Timer1IntHandler(void)
 {
     char cOne, cTwo;
 
@@ -159,15 +84,15 @@ Timer3IntHandler(void)
     //
     // Use the flags to Toggle the LED for this timer
     //
-    if (flag4)
+    if (flag3)
     {
-        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 0xFF);
+        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0xFF);
     }
     else
     {
-        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 0x00);
+        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0x00);
     }
-    flag4 = !flag4;
+    flag3 = !flag3;
     //
     // Update the interrupt status.
     // 
@@ -236,9 +161,9 @@ main(void)
     MAP_TimerConfigure(TIMER2_BASE, TIMER_CFG_PERIODIC);
     MAP_TimerConfigure(TIMER3_BASE, TIMER_CFG_PERIODIC);
     
-    MAP_TimerLoadSet(TIMER0_BASE, TIMER_A, g_ui32SysClock *8); // 1 segundo 
-    MAP_TimerLoadSet(TIMER1_BASE, TIMER_A, g_ui32SysClock *4); // 0.5 segundos
-    MAP_TimerLoadSet(TIMER2_BASE, TIMER_A, g_ui32SysClock *2); 
+    MAP_TimerLoadSet(TIMER0_BASE, TIMER_A, g_ui32SysClock ); // 1 segundo 
+    MAP_TimerLoadSet(TIMER1_BASE, TIMER_A, g_ui32SysClock / 2); // 0.5 segundos
+    MAP_TimerLoadSet(TIMER2_BASE, TIMER_A, g_ui32SysClock ); 
     MAP_TimerLoadSet(TIMER3_BASE, TIMER_A, g_ui32SysClock );
 
     MAP_IntEnable(INT_TIMER0A);
