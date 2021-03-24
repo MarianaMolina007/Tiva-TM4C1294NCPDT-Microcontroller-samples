@@ -204,10 +204,12 @@ void GPIOIntHandler(void)
     if (!automatic && ui32Status == 0x02)
     {
         counter++;
-        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, ((counter+1)%2==0)? 0xFF : 0x00);
-        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, ((counter+2)%4==0)? 0xFF : 0x00);
-        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, ((counter+4)%8==0)? 0xFF : 0x00);
-        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, ((counter+8)%16==0)? 0xFF : 0x00);
+        if(counter == 16)
+            counter = 0;
+        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, ((counter+1)%2==0)? 0xFF : 0x00); 
+        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, ((counter+2)%4==0)? 0xFF : 0x00); 
+        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, ((counter+4)%8==0)? 0xFF : 0x00); 
+        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, ((counter+8)%16==0)? 0xFF : 0x00); 
     }
     
 }
@@ -257,22 +259,14 @@ UARTIntHandler(void)
         ind++;
     }
 
-    if(data[0]=='m' && data[1]=='1' && data[2]=='_')
-    {
-        uint8_t timer_value;
-        dig1=data[3]-48;
-        dig2=data[4]-48;
-        dig3=data[5]-48;
-        timer_value= dig1*100 + dig2*10 + dig3;    
-        
-        MAP_TimerLoadSet(TIMER0_BASE, TIMER_A, 120000000/timer_value);
-        MAP_TimerEnable(TIMER0_BASE, TIMER_A); //!
-        UARTCharPut(UART0_BASE, 'p');
-        UARTCharPut(UART0_BASE, ':');
-        UARTCharPut(UART0_BASE, (uint8_t)48+dig1);
-        UARTCharPut(UART0_BASE, (uint8_t)48+dig2);
-        UARTCharPut(UART0_BASE, (uint8_t)48+dig3);
-    }
+    if(data[0]=='P' && data[1]=='W' && data[2]=='M'&& data[3]=='_'){
+	dig1=data[4]-48;
+	dig2=data[5]-48;
+	dig3=data[6]-48;
+	dig4=data[7]-48;
+	pwm_value=dig1*1000+dig2*100+dig3*10+dig4;	
+	MAP_PWMPulseWidthSet(PWM0_BASE, PWM_OUT_5, pwm_value); ///***
+	}
 }
 
 
@@ -397,16 +391,20 @@ main(void)
 
     #pragma endregion UART
     #pragma region PWM
-    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM0); // Enable PWM0
-    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG); // Enable port G
-    MAP_GPIOPinConfigure(GPIO_PG1_M0PWM5); // Configure PWM by table pin name
-    MAP_GPIOPinTypePWM(GPIO_PORTG_BASE, GPIO_PIN_1); // Asign pin G0 as PWM 
-    MAP_PWMClockSet(PWM0_BASE, PWM_SYSCLK_DIV_8); // Set PWM clock with prescaler of 8 (8, 64)
-    ui32PWMClockRate = g_ui32SysClock / 8; // Divide clock with prescaler
-    MAP_PWMGenConfigure(PWM0_BASE, PWM_GEN_2, PWM_GEN_MODE_DOWN | PWM_GEN_MODE_NO_SYNC); // Configure generator 0 based on table, most of time gen (we have up"triangular signal" and down"sawtooth signal"), no sync for 2 generators 0 independet (we have dependent and independent)
-    MAP_PWMGenPeriodSet(PWM0_BASE, PWM_GEN_2, (ui32PWMClockRate / freq_m1)); // Configure PWM frequency in Hz
-    g_ui32PWMIncrement = ((ui32PWMClockRate / freq_m1) / 1000); // pulse width variable
-    MAP_PWMPulseWidthSet(PWM0_BASE, PWM_OUT_0, g_ui32PWMIncrement); // Set pulse width
+    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);
+    MAP_GPIOPinConfigure(GPIO_PG1_M0PWM5);
+    MAP_GPIOPinTypePWM(GPIO_PORTG_BASE, GPIO_PIN_1);
+
+    MAP_PWMClockSet(PWM0_BASE, PWM_SYSCLK_DIV_64);
+    ui32PWMClockRate = g_ui32SysClock / 64;
+    MAP_PWMGenConfigure(PWM0_BASE, PWM_GEN_2,
+                        PWM_GEN_MODE_DOWN | PWM_GEN_MODE_NO_SYNC);
+    MAP_PWMGenPeriodSet(PWM0_BASE, PWM_GEN_2, (ui32PWMClockRate / 1000));
+    MAP_PWMOutputState(PWM0_BASE, PWM_OUT_5, true);
+
+    MAP_PWMGenEnable(PWM0_BASE, PWM_GEN_2);
+
+    MAP_PWMPulseWidthSet(PWM0_BASE, PWM_OUT_5, 1200);
     #pragma endregion PWM
     while(1)
     {

@@ -100,7 +100,7 @@ Timer0IntHandler(void)
     // Toggle the flag for the first timer.
     //
     HWREGBITW(&g_ui32Flags, 0) ^= 1;
-
+    //
     //
     // Use the flags to Toggle the LED for this timer
     //
@@ -110,6 +110,7 @@ Timer0IntHandler(void)
     // Update the interrupt status.
     //
     MAP_IntMasterDisable();
+    //Aditional logic
     cOne = HWREGBITW(&g_ui32Flags, 0) ? '1' : '0';
     cTwo = HWREGBITW(&g_ui32Flags, 1) ? '1' : '0';
     UARTprintf("\rT1: %c  T2: %c", cOne, cTwo);
@@ -150,44 +151,6 @@ Timer1IntHandler(void)
     UARTprintf("\rT1: %c  T2: %c", cOne, cTwo);
     MAP_IntMasterEnable();
 }
-void
-Timer2IntHandler(void)
-{
-    char cOne, cTwo;
-    bool flag = true;
-    //
-    // Clear the timer interrupt.
-    //
-    MAP_TimerIntClear(TIMER2_BASE, TIMER_TIMB_TIMEOUT);
-
-    //
-    // Toggle the flag for the second timer.
-    //
-    HWREGBITW(&g_ui32Flags, 1) ^= 1;
-
-    //
-    // Use the flags to Toggle the LED for this timer
-    //
-    GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_2, g_ui32Flags);
-
-    //
-    // Update the interrupt status.
-    // 
-    MAP_IntMasterDisable();
-    if (flag)
-    {
-        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_2, 0xFF);
-    }
-    else
-    {
-        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_2, 0x00);
-    }
-    flag = !flag;
-    cOne = HWREGBITW(&g_ui32Flags, 0) ? '1' : '0';
-    cTwo = HWREGBITW(&g_ui32Flags, 1) ? '1' : '0';
-    // UARTprintf("\rT1: %c  T2: %c", cOne, cTwo);
-    MAP_IntMasterEnable();
-}
 
 //*****************************************************************************
 //
@@ -212,7 +175,7 @@ ConfigureUART(void)
     //
     MAP_GPIOPinConfigure(GPIO_PA0_U0RX);
     MAP_GPIOPinConfigure(GPIO_PA1_U0TX);
-    MAP_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2);
+    MAP_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
 
     //
     // Initialize the UART for console I/O.
@@ -255,14 +218,14 @@ main(void)
     //
     // Enable the GPIO pins for the LEDs (PN0 & PN1).
     //
-    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2);
+    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1);
 
 
     //
     // Enable the peripherals used by this example.
     //
+    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
-    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2);
 
     //
     // Enable processor interrupts.
@@ -272,33 +235,27 @@ main(void)
     //
     // Configure the two 32-bit periodic timers.
     //
+    MAP_TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
     MAP_TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC);
-    MAP_TimerConfigure(TIMER2_BASE, TIMER_CFG_PERIODIC);
+    MAP_TimerLoadSet(TIMER0_BASE, TIMER_A, g_ui32SysClock);
     MAP_TimerLoadSet(TIMER1_BASE, TIMER_A, g_ui32SysClock / 2);
-    MAP_TimerLoadSet(TIMER2_BASE, TIMER_B, g_ui32SysClock / 4);
 
     //
     // Setup the interrupts for the timer timeouts.
     //
+    MAP_IntEnable(INT_TIMER0A);
     MAP_IntEnable(INT_TIMER1A);
-    MAP_IntEnable(INT_TIMER2B);
+    MAP_TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
     MAP_TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
-    MAP_TimerIntEnable(TIMER2_BASE, TIMER_TIMB_TIMEOUT);
 
     //
     // Enable the timers.
     //
+    MAP_TimerEnable(TIMER0_BASE, TIMER_A);
     MAP_TimerEnable(TIMER1_BASE, TIMER_A);
-    MAP_TimerEnable(TIMER2_BASE, TIMER_B);
 
     //
     // Loop forever while the timers run.
-    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
-    MAP_TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
-    MAP_TimerLoadSet(TIMER0_BASE, TIMER_A, g_ui32SysClock);
-    MAP_IntEnable(INT_TIMER0A);
-    MAP_TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
-    MAP_TimerEnable(TIMER0_BASE, TIMER_A);
     //
     while(1)
     {
