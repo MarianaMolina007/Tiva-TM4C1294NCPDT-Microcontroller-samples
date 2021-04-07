@@ -118,7 +118,7 @@ num=(int)(data[6]-48)*100+(int)(data[7]-48)*10+(int)(data[8]-48);//preguntar al 
 void
 Timer0IntHandler(void)
 {
-    char cOne, cTwo;
+    // char cOne, cTwo;
 
     //
     // Clear the timer interrupt.
@@ -140,22 +140,22 @@ Timer0IntHandler(void)
     // Update the interrupt status.
     //
     MAP_IntMasterDisable();
-    cOne = HWREGBITW(&g_ui32Flags, 0) ? '1' : '0';
-    cTwo = HWREGBITW(&g_ui32Flags, 1) ? '1' : '0';
-    if(flag){   ///****
-        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, 0xff);///****
-	}///****
-    else{///****
-	GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, 0x00);///****
-	}///****
-    flag = !flag;///****
+    // cOne = HWREGBITW(&g_ui32Flags, 0) ? '1' : '0';
+    // cTwo = HWREGBITW(&g_ui32Flags, 1) ? '1' : '0';
+    // if(flag){   ///****
+    //     GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, 0xff);///****
+	// }///****
+    // else{///****
+	// GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, 0x00);///****
+	// }///****
+    // flag = !flag;///****
     MAP_IntMasterEnable();///****
 }
 void
 UARTIntHandler(void)
 {
-    uint32_t ui32Status,pwm_value;
-    uint8_t dig1,dig2,dig3,dig4;
+    uint32_t ui32Status;
+    int8_t dig;
     //
     // Get the interrrupt status.
     //
@@ -195,40 +195,11 @@ UARTIntHandler(void)
         ind++;
     }
 
-    if (data[0] == 'L' && data[1] == 'D' && data[2] == '_' && data[3] == 'O' && data[4] == 'N')
+    if (data[0] == 'L' && data[1] == 'D' && data[2] == '_')
     {
-        MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0xFF);
-    }
-    
-    if (data[0] == 'L' && data[1] == 'D' && data[2] == '_' && data[3] == 'O' && data[4] == 'F' && data[5] == 'F')
-    {
-        MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0x00);    
-    }
-	
-    if(data[0]=='P' && data[1]=='W' && data[2]=='M'&& data[3]=='_'){
-	dig1=data[4]-48;
-	dig2=data[5]-48;
-	dig3=data[6]-48;
-	dig4=data[7]-48;
-	pwm_value=dig1*1000+dig2*100+dig3*10+dig4;	
-	MAP_PWMPulseWidthSet(PWM0_BASE, PWM_OUT_0, pwm_value); ///***
-	}
-
-    if(data[0]=='m' && data[1]=='1' && data[2]=='_')
-    {
-        uint8_t timer_value;
-        dig1=data[3]-48;
-        dig2=data[4]-48;
-        dig3=data[5]-48;
-        timer_value= dig1*100 + dig2*10 + dig3;    
-        
-        MAP_TimerLoadSet(TIMER0_BASE, TIMER_A, 120000000/timer_value);
-        MAP_TimerEnable(TIMER0_BASE, TIMER_A); //!
-        UARTCharPut(UART0_BASE, 'p');
-        UARTCharPut(UART0_BASE, ':');
-        UARTCharPut(UART0_BASE, (uint8_t)48+dig1);
-        UARTCharPut(UART0_BASE, (uint8_t)48+dig2);
-        UARTCharPut(UART0_BASE, (uint8_t)48+dig3);
+        dig = data[3]-48;
+        MAP_GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0|GPIO_PIN_1, dig);
+        // UARTCharPut(UART0_BASE, (uint8_t)48+dig);
     }
 }
 
