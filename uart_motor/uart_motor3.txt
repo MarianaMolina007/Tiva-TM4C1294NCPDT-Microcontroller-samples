@@ -102,7 +102,7 @@ UARTIntHandler(void)
     
     if (data[8] == 'L' && data[9] == 'D' && data[10] == '_' && data[11] == 'O' && data[12] == 'F' && data[13] == 'F')
     {
-        MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0x00);    
+        MAP_GPIOPiEnWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0x00);    
     }
     
 

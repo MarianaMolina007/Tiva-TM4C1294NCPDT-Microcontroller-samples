@@ -90,7 +90,6 @@ UARTIntHandler(void)
     //
     // Loop while there are characters in the receive FIFO.
     //
-    uint8_t ind=0;
     while(MAP_UARTCharsAvail(UART0_BASE))
     {
         //
@@ -104,7 +103,6 @@ UARTIntHandler(void)
         //
         MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, GPIO_PIN_0);
 
-        data[ind]=MAP_UARTCharGetNonBlocking(UART0_BASE);
         //
         // Delay for 1 millisecond.  Each SysCtlDelay is about 3 clocks.
         //
@@ -114,16 +112,6 @@ UARTIntHandler(void)
         // Turn off the LED
         //
         MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 0);
-        ind++;
-    }
-
-    if(data[0] == 'E')
-    {
-        MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0xFF);
-    }
-    if(data[0] == 'A')
-    {
-        MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0x00);
     }
 }
 
@@ -173,7 +161,7 @@ main(void)
     //
     // Enable the GPIO pins for the LED (PN0).
     //
-    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_0|GPIO_PIN_4);
+    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_0);
 
     //
     // Enable the peripherals used by this example.
@@ -209,9 +197,7 @@ main(void)
     //
     // Prompt for text to be entered.
     //
-    // UARTSend((uint8_t *)"\033[2JEnter text: ", 16);
-
-    MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0xFF);
+    UARTSend((uint8_t *)"\033[2JEnter text: ", 16);
 
     //
     // Loop forever echoing data through the UART.

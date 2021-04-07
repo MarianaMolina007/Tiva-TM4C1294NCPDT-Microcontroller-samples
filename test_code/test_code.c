@@ -199,15 +199,10 @@ void GPIOIntHandler(void)
     if (ui32Status == 0x01)
     {
         automatic = !automatic;
-<<<<<<< HEAD
-=======
-        counter = 0;
->>>>>>> e2ce16fe08eb67e87aaaa2d91d1c11162829dbd9
     }
     if (!automatic && ui32Status == 0x02)
     {
         counter++;
-<<<<<<< HEAD
         if (counter == 16)
         {
             counter = 0;
@@ -217,14 +212,6 @@ void GPIOIntHandler(void)
         MAP_GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, ((counter/2)%2) ? 0xFF : 0x00);
         MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, ((counter/4)%2) ? 0xFF : 0x00);
         MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, ((counter/8)%2) ? 0xFF : 0x00);
-=======
-        if(counter == 16)
-            counter = 0;
-        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, ((counter+1)%2==0)? 0xFF : 0x00); 
-        GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, ((counter+2)%4==0)? 0xFF : 0x00); 
-        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, ((counter+4)%8==0)? 0xFF : 0x00); 
-        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, ((counter+8)%16==0)? 0xFF : 0x00); 
->>>>>>> e2ce16fe08eb67e87aaaa2d91d1c11162829dbd9
     }
     
 }
