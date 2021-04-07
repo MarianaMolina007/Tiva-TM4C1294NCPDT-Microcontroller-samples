@@ -59,62 +59,7 @@ __error__(char *pcFilename, uint32_t ui32Line)
 // The UART interrupt handler.
 //
 //*****************************************************************************
-bool flag=false;
-int32_t counter=0;
-bool flag2=true;
-uint32_t num=0; //000-999
-uint32_t dig_centenas=0; //000-999
-uint32_t dig_unidades=0; //000-999
-uint32_t dig_decenas=0; //000-999
-uint32_t num2=-1; //000-999
-void GPIOIntHandler(void)
-{
-    global_counter++;
-	uint32_t ui32Status;
-	ui32Status=GPIOIntStatus(GPIO_PORTJ_BASE, true);
-    GPIOIntClear(GPIO_PORTJ_BASE,ui32Status);
-	//UARTSend((uint8_t *)"\033[2JPressed: ", 12);
-    if(data[9]=='_'){
-num=(int)(data[6]-48)*100+(int)(data[7]-48)*10+(int)(data[8]-48);//preguntar al inge
-    if(num!=num2)
-    {
-        flag2=true;
-    }
-    if(flag2==true){
-        counter=num;
-        flag2=false;
-    }
-    dig_centenas=(int)counter/100;
-    dig_decenas=(int)(counter-dig_centenas*100)/10;
-    dig_unidades=(int)(counter-dig_centenas*100-dig_decenas*10);
-	UARTCharPut(UART0_BASE, 'p');
-    UARTCharPut(UART0_BASE, ':');
-    UARTCharPut(UART0_BASE, (uint8_t)48+dig_centenas);
-    UARTCharPut(UART0_BASE, (uint8_t)48+dig_decenas);
-    UARTCharPut(UART0_BASE, (uint8_t)48+dig_unidades);
-    UARTCharPut(UART0_BASE, '\n');
-    if(data[0]=='C'&&data[1]=='O'&&data[2]=='U'&&data[3]=='N'&&data[4]=='T'&&data[5]==':'&&data[9]=='_'&&data[10]=='A'){
-        counter++;
-        if(counter>=1000)
-        {
-            counter=999;
-        }
-    }
-    if(data[0]=='C'&&data[1]=='O'&&data[2]=='U'&&data[3]=='N'&&data[4]=='T'&&data[5]==':'&&data[9]=='_'&&data[10]=='D'){
-        counter--;
-        if(counter<1)
-        {
-            counter=0;
-        }
-    }
-    num2=num;//preguntar al inge
-    }
-    if(global_counter==5)
-    {
-        MAP_TimerLoadSet(TIMER0_BASE, TIMER_A, 120000000);
-        MAP_TimerEnable(TIMER0_BASE, TIMER_A);
-    }
-}
+
 void
 Timer0IntHandler(void)
 {
@@ -232,7 +177,7 @@ UARTSend(const uint8_t *pui8Buffer, uint32_t ui32Count)
 int
 main(void)
 {
-	 uint32_t ui32PWMClockRate;
+	//  uint32_t ui32PWMClockRate;
     //
     // Run from the PLL at 120 MHz.
     // Note: SYSCTL_CFG_VCO_240 is a new setting provided in TivaWare 2.2.x and
@@ -247,17 +192,13 @@ main(void)
     // Enable the GPIO port that is used for the on-board LED.
     //
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);
-    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM0);
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0); ///****
-    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOJ);//****///
     //
     // Enable the GPIO pins for the LED (PN0).
     //
     MAP_GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0|GPIO_PIN_1);
     MAP_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_4);
-    MAP_GPIOPinTypeGPIOInput(GPIO_PORTJ_BASE,GPIO_PIN_0);   //****///
-    GPIOPadConfigSet(GPIO_PORTJ_BASE,GPIO_PIN_0,GPIO_STRENGTH_4MA,GPIO_PIN_TYPE_STD_WPU); //****///
     //
     // Enable the peripherals used by this example.
     //
@@ -268,15 +209,6 @@ main(void)
     // Enable processor interrupts.
     //
     MAP_IntMasterEnable();
-	
-    
-    GPIOIntTypeSet(GPIO_PORTJ_BASE, GPIO_INT_PIN_0,GPIO_FALLING_EDGE);
-    GPIOIntRegister(GPIO_PORTJ_BASE,GPIOIntHandler);
-    GPIOIntEnable(GPIO_PORTJ_BASE, GPIO_INT_PIN_0);
-    //GPIOIntRegister(uint32_t ui32Port, void (*pfnIntHandler)(void))
-    //GPIOIntRegisterPin(uint32_t ui32Port, uint32_t ui32Pin,
-    //               void (*pfnIntHandler)(void))
-    
 
 
     MAP_TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);   ///****
@@ -307,24 +239,11 @@ main(void)
     //
     // Prompt for text to be entered.
     //
-    UARTSend((uint8_t *)"\033[2JEnter text: ", 16);
+    // UARTSend((uint8_t *)"\033[2JEnter text: ", 16);
 
     //
     // Loop forever echoing data through the UART.
     //
-
-	MAP_GPIOPinConfigure(GPIO_PF0_M0PWM0);
-    MAP_GPIOPinTypePWM(GPIO_PORTF_BASE, GPIO_PIN_0);
-
-    MAP_PWMClockSet(PWM0_BASE, PWM_SYSCLK_DIV_64);
-    ui32PWMClockRate = g_ui32SysClock / 64;
-    MAP_PWMGenConfigure(PWM0_BASE, PWM_GEN_0,
-                        PWM_GEN_MODE_DOWN | PWM_GEN_MODE_NO_SYNC);
-    MAP_PWMGenPeriodSet(PWM0_BASE, PWM_GEN_0, (ui32PWMClockRate / 1000));
-    MAP_PWMPulseWidthSet(PWM0_BASE, PWM_OUT_0, 1200);
-    MAP_PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT, true);
-
-    MAP_PWMGenEnable(PWM0_BASE, PWM_GEN_0);
     
     while(1)
     {
