@@ -24,6 +24,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <math.h>
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
 #include "inc/hw_gpio.h"
@@ -83,6 +84,11 @@
 // USB HID usage code.
 //
 //*****************************************************************************
+bool isprime(int);
+
+uint8_t counter = 0;
+uint8_t primo = 2;
+
 static const int8_t g_ppi8KeyUsageCodes[][2] =
 {
     { 0, HID_KEYB_USAGE_SPACE },                       //   0x20
@@ -657,7 +663,6 @@ main(void)
             // Remember the current time.
             //
             ui32LastTickCount = g_ui32SysTickCount;
-
             //
             // Has the suspend state changed since last time we checked?
             //
@@ -695,8 +700,15 @@ main(void)
                 }
                 else
                 {
-                    SendString("You have pressed the SW1 button.\n"
-                               "Try pressing the SW2 button.\n\n");
+                    counter++;
+                    if(counter > 99){
+                        SendString("Has superado el limite maximo  \n");    
+                        counter = 0;
+                    }else{
+                        char snum[5];
+                        SendString(itoa(counter, snum, 10));
+                        SendString("  \n");
+                    }
                 }
             }
             else if(BUTTON_PRESSED(RIGHT_BUTTON, ui8Buttons,
@@ -704,7 +716,7 @@ main(void)
             {
                 //
                 // If the bus is suspended then resume it.  Otherwise, type
-                // out an instructional message.
+                // out an instructi//26272829303132333435363738394041424344454647484950515253onal message.
                 //
                 if(g_bSuspended)
                 {
@@ -713,9 +725,20 @@ main(void)
                 }
                 else
                 {
-                    SendString("You have pressed the SW2 button.\n"
-                               "Try pressing the Caps Lock key on your "
-                               "keyboard and then press either button.\n\n");
+                    char snum[5];
+                    SendString(' ');
+                    while (!isprime(primo))
+                    {
+                        primo++;
+                    }
+                    if(primo > 99){
+                        SendString("Has superado el limite maximo \n");
+                        primo = 2;
+                    }else{
+                        SendString(itoa(primo, snum, 10));
+                        SendString("  \n");
+                        primo++;
+                    }
                 }
             }
 
@@ -728,4 +751,14 @@ main(void)
             }
         }
     }
+}
+
+
+bool isprime(int x)
+{
+    if (x < 2) return false;
+    for(int i=2; i<= sqrt(x); i++) {
+        if ((x%i) == 0) return false;
+    }
+    return true;
 }
