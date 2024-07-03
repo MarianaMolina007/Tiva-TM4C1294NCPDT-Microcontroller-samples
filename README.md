@@ -1,4 +1,4 @@
-# Cheat sheet ek - tm4c1294xl
+# Cheat sheet ek 
 
 ## GPIO Output
 
